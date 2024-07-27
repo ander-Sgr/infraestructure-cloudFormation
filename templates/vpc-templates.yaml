@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: VPC Template
+
+Resources:
+     VPC:
+       Type: 'AWS::EC2::VPC'
+       Properties:
+          CidrBlock: !Ref VpcCidr
+          EnableDnsSupport: true
+          EnableDnsHostnames: true
+          Tags:
+               - Value: Name
+                 Key: '${AWS::StackNmae}-vpc'
+
+     PublicSubnet:
+          Type: AWS::EC2::Subnet
+          Properties:
+               VpcId: !Ref VPC
+               CidrBlock: !Ref PublicSubnetCidr
+               MapPublicIpOnLaunch: true 
+           
