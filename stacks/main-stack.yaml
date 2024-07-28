@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Main Stack
 
 Parameters:
@@ -59,6 +59,14 @@ Resources:
         VPCId: !GetAtt VPCStack.Outputs.VpcId
         MyIP: !Ref MyPublicIP
         PrivateNetworkIp: !Ref PrivateNetworkIp
+
+  EC2GroupSecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://my-s3-ander-templates.s3.amazonaws.com/ec2-security-template.yaml
+      Parameters:
+        VPCId: !GetAtt VPCStack.Outputs.VpcId
+        ALBSecurityGroupId: !GetAtt ALBGroupSecurityStack.Outputs.ALBSecurityGroupId
 
 Outputs:
   VpcId:
