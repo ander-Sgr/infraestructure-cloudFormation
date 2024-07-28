@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template describe all the subnets of my infra
+
+Parameters:
+  VPCId:
+    Type: String
+
+  AvailabilityZones:
+    Type: List<String>
+    Default: ["us-east-1a", "us-east-1b"]
+
+  PublicSubnet1Cidr:
+    Type: String
+    Description: The cidr of the 1st public subnet
+
+  PublicSubnet2Cidr:
+    Type: String
+    Description: The cidr of the 1st public subnet
+
+Resources:
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId
+      CidrBlock: !Ref PublicSubnet1Cidr
+      AvailabilityZone: !Select [0, !Ref AvailabilityZones]
+      MapPublicIpOnLaunch: True
+      Tags:
+        - Value: Name
+          Key: public_subnet_1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId
+      CidrBlock: !Ref PublicSubnet2Cidr
