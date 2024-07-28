@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Main Stack
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: "10.0.0.0/16"
+    Description: The CIDR block for the VPC
+
+  PublicSubnet1Cidr:
+    Type: String
+    Default: "10.0.1.0/24"
+    Description: The CIDR block for the first public subnet
+
+  PublicSubnet2Cidr:
+    Type: String
+    Default: "10.0.2.0/24"
+    Description: The CIDR block for the second public subnet
+
+  PrivateSubnetCidr:
+    Type: String
+    Default: "10.0.3.0/24"
+    Description: The CIDR block for the private subnet
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/my-s3-ander-templates/vpc-template.yaml"
+      Parameters:
+        VpcCidr: !Ref VpcCidr
+
+  SubnetStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/my-s3-ander-templates/subnets-template.yaml"
+      Parameters:
+        VPCId: !GetAtt VPCStack.Outputs.VpcId
+        PublicSubnet1Cidr: !Ref PublicSubnet1Cidr
+        PublicSubnet2Cidr: !Ref PublicSubnet2Cidr
+        PrivateSubnetCidr: !Ref PrivateSubnetCidr
+        InternetGatewayId: !GetAtt VPCStack.Outputs.InternetGatewayId
+
+Outputs:
+  VpcId:
+    Description: The ID of the VPC
+    Value: !GetAtt VPCStack.Outputs.VpcId
+
+  PrivateSubnetId:
+    Description: The ID of the private subnet
+    Value: !GetAtt SubnetStack.Outputs.PrivateSubnetId
+
+  PublicSubnetId1:
+    Description: The ID of the first public subnet
+    Value: !GetAtt SubnetStack.Outputs.PublicSubnetId1
+
+  PublicSubnetId2:
+    Description: The ID of the second public subnet
+    Value: !GetAtt SubnetStack.Outputs.PublicSubnetId2
