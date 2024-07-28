@@ -16,6 +16,9 @@ Resources:
       VpcId: !Ref VPCId
       GroupName: GroupSecurity for the ALB
       GroupDescription: Allow SSH and HTTP ports for the ALB
+      Tags:
+        - Value: Name
+          Key: ALBSecurityGroup
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080
