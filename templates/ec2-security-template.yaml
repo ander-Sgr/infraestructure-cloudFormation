@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Security group for the EC2's and the escaling group
+
+Parameters:
+  VpcId:
+    Type: String
+  ALBSecurityGroupId:
+    Type: String
+
+Resources:
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupName: GroupSecurity for the EC2 instances
+      GroupDescription: This group security take the rules from ALB SG for allow 8080 requests and 22 from the private network
+      Tags:
+        - Value: Name
+          Key: EC2SecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          SourceSecurityGroupId: !Ref ALBSecurityGroupId
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+Outputs:
+  EC2SecurityGroupID:
+    Value: !Ref EC2SecurityGroup
