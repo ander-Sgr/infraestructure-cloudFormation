@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Template for deploy a ec2 instance
+
+Parameters:
+  SubnetId:
+    Type: String
+  InstanceType:
+    Type: String
+    AllowedValues:
+      - t2.micro
+  InstanceName:
+    Type: String
+    Default: Bastion
+  KeyName:
+    Type: String
+  SecurityGroupId:
+    Type: String
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SubnetId: !Ref SubnetId
+      ImageId: ami-0427090fd1714168b
+      KeyName: !Ref KeyName
+      InstanceType: !Ref InstanceType
+      Tags:
+        - Value: Name
+          Key: !Ref InstanceName
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
