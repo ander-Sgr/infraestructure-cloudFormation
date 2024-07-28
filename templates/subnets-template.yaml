@@ -1,13 +1,17 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This template describe all the subnets of my infra
 
+# PARAMS
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AZ1: "us-east-1a"
+      AZ2: "us-east-1b"
+
 Parameters:
   VPCId:
     Type: String
-
-  AvailabilityZones:
-    Type: List<String>
-    Default: ["us-east-1a", "us-east-1b"]
 
   PublicSubnet1Cidr:
     Type: String
@@ -15,7 +19,18 @@ Parameters:
 
   PublicSubnet2Cidr:
     Type: String
-    Description: The cidr of the 1st public subnet
+    Description: The cidr of the 2st public subnet
+
+  PrivateSubnetCidr:
+    Type: String
+
+  #AttachGateway:
+  #  Type: String
+
+  InternetGatewayId:
+    Type: String
+
+#Definition of the public & private subnets
 
 Resources:
   PublicSubnet1:
@@ -23,7 +38,7 @@ Resources:
     Properties:
       VpcId: !Ref VPCId
       CidrBlock: !Ref PublicSubnet1Cidr
-      AvailabilityZone: !Select [0, !Ref AvailabilityZones]
+      AvailabilityZone: !FindInMap [RegionMap, !Ref "AWS::Region", AZ1]
       MapPublicIpOnLaunch: True
       Tags:
         - Value: Name
@@ -34,3 +49,104 @@ Resources:
     Properties:
       VpcId: !Ref VPCId
       CidrBlock: !Ref PublicSubnet2Cidr
+      AvailabilityZone: !FindInMap [RegionMap, !Ref "AWS::Region", AZ2]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Value: Name
+          Key: public_subnet_2
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId
+      CidrBlock: !Ref PrivateSubnetCidr
+      AvailabilityZone: !FindInMap [RegionMap, !Ref "AWS::Region", AZ1]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: private_subnet
+
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      AllocationId: !GetAtt EIP.AllocationId
+      Tags:
+        - Value: Name
+          Key: NAT for private subnet
+
+  # defining the rt tables
+  # Public rt
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: public_route_table
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGatewayId
+
+  # Private rt
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: private_route_table
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NATGateway
+
+  #assoc with the rt public
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  # assoc with the rt private
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet
+
+# outputs
+Outputs:
+  PrivateSubnetId:
+    Value: !Ref PrivateSubnet
+
+  PublicSubnetId1:
+    Value: !Ref PublicSubnet1
+
+  PublicSubnetId2:
+    Value: !Ref PublicSubnet2
+
+  PrivateNATGatewayId:
+    Value: !Ref NATGateway
+
+  NATGatewayId:
+    Description: The id of the private NAT gateway
+    Value: !Ref NATGateway
