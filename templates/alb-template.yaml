@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Application Load Balancer
+
+Parameters:
+  VPCId:
+    Type: String
+    Description: The ID of the VPC
+
+  PublicSubnetId1:
+    Type: String
+    Description: The ID of the first public subnet
+
+  PublicSubnetId2:
+    Type: String
+    Description: The ID of the second public subnet
+
+  ALBSecurityGroupId:
+    Type: String
+    Description: The ID of the ALB security group
+
+Resources:
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MyApplicationLoadBalancer
+      Subnets:
+        - !Ref PublicSubnetId1
+        - !Ref PublicSubnetId2
+      SecurityGroups:
+        - !Ref ALBSecurityGroupId
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "60"
+
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 8080
+      Protocol: HTTP
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: MyTargetGroup
+      Port: 8080
+      Protocol: HTTP
+      VpcId: !Ref VPCId
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: 8080
+      HealthCheckPath: /
+      Matcher:
+        HttpCode: 200
+      TargetType: instance
+
+Outputs:
+  LoadBalancerDNSName:
+    Description: The DNS name of the load balancer
+    Value: !GetAtt LoadBalancer.DNSName
+  TargetGroupArn:
+    Description: The ARN of the target group
+    Value: !Ref TargetGroup
