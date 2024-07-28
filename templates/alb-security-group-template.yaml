@@ -14,11 +14,10 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Ref VPCId
-      GroupName: GroupSecurity for the ALB
-      GroupDescription: Allow SSH and HTTP ports for the ALB
+      GroupDescription: Allow HTTP and SSH traffic to the ALB
       Tags:
-        - Value: Name
-          Key: ALBSecurityGroup
+        - Key: Name
+          Value: ALBSecurityGroup
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080

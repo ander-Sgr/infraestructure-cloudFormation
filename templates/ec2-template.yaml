@@ -29,3 +29,8 @@ Resources:
           Key: !Ref InstanceName
       SecurityGroupIds:
         - !Ref SecurityGroupId
+
+Outputs:
+  BastionPublicIP:
+    Description: The Public IP of the Bastion instance
+    Value: !GetAtt EC2Instance.PublicIp
