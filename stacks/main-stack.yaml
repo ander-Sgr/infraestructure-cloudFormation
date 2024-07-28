@@ -39,21 +39,24 @@ Parameters:
 
   KeyName:
     Type: String
-    Default: test-key
     Description: Name of the EC2 Key Pair
+
+  S3BucketPrefix:
+    Type: String
+    Description: The S3 bucket prefix where the templates are stored
 
 Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/vpc-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/vpc-template.yaml
       Parameters:
         VpcCidr: !Ref VpcCidr
 
   SubnetStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/subnets-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/subnets-template.yaml
       Parameters:
         VPCId: !GetAtt VPCStack.Outputs.VpcId
         PublicSubnet1Cidr: !Ref PublicSubnet1Cidr
@@ -64,7 +67,7 @@ Resources:
   ALBGroupSecurityStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/alb-security-group-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/alb-security-group-template.yaml
       Parameters:
         VPCId: !GetAtt VPCStack.Outputs.VpcId
         MyIP: !Ref MyPublicIP
@@ -73,7 +76,7 @@ Resources:
   EC2GroupSecurityStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://my-s3-ander-templates.s3.amazonaws.com/ec2-security-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/ec2-security-template.yaml
       Parameters:
         VPCId: !GetAtt VPCStack.Outputs.VpcId
         ALBSecurityGroupId: !GetAtt ALBGroupSecurityStack.Outputs.ALBSecurityGroupId
@@ -81,7 +84,7 @@ Resources:
   LoadBalancerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/alb-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/alb-template.yaml
       Parameters:
         VPCId: !GetAtt VPCStack.Outputs.VpcId
         PublicSubnetId1: !GetAtt SubnetStack.Outputs.PublicSubnetId1
@@ -91,7 +94,7 @@ Resources:
   AutoScalingGroupStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/auto-escaling-group-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/auto-escaling-group-template.yaml
       Parameters:
         PrivateSubnetId: !GetAtt SubnetStack.Outputs.PrivateSubnetId
         EC2SecurityGroupId: !GetAtt EC2GroupSecurityStack.Outputs.EC2SecurityGroupId
@@ -102,7 +105,7 @@ Resources:
   EC2InstanceBastionStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/ec2-template.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketPrefix}/ec2-template.yaml
       Parameters:
         SubnetId: !GetAtt SubnetStack.Outputs.PublicSubnetId1
         KeyName: !Ref KeyName
@@ -128,3 +131,11 @@ Outputs:
 
   ALBGroupSecurityId:
     Value: !GetAtt ALBGroupSecurityStack.Outputs.ALBSecurityGroupId
+
+  BastionPublicIP:
+    Description: The Public IP of the Bastion instance
+    Value: !GetAtt EC2InstanceBastionStack.Outputs.BastionPublicIP
+
+  LoadBalancerDNSName:
+    Description: The DNS name of the Load Balancer
+    Value: !GetAtt LoadBalancerStack.Outputs.LoadBalancerDNSName
