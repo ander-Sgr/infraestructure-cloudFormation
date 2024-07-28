@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: VPC Template with 2 private subnets, 1 private subnet
+Description: VPC Template with the internet gateway and the nat gateway for provide acces to the ec2 for download resources
 
 Parameters:
   VpcCidr:
@@ -16,7 +16,7 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: test-vpc
+          Value: my-vpc
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -28,8 +28,22 @@ Resources:
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-         VpcId: !Ref VPC
-         InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: !Ref PublicSubnetId
+      AllocationId: !GetAtt EIP.AllocationId
+      Tags:
+           - Value: Name
+             Key: NAT for private subnet
 
 Outputs:
   VpcId:
@@ -39,3 +53,7 @@ Outputs:
   InternetGatewayId:
     Description: The ID of the internet gateway
     Value: !Ref InternetGateway
+
+  NATGatewayId:
+    Description: The id of the private NAT gateway
+    Value: !Ref NATGateway
