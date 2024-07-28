@@ -1,45 +1,64 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: Main Stack
 
 Parameters:
   VpcCidr:
     Type: String
-    Default: "10.0.0.0/16"
+    Default: 10.0.0.0/16
     Description: The CIDR block for the VPC
 
   PublicSubnet1Cidr:
     Type: String
-    Default: "10.0.1.0/24"
+    Default: 10.0.1.0/24
     Description: The CIDR block for the first public subnet
 
   PublicSubnet2Cidr:
     Type: String
-    Default: "10.0.2.0/24"
+    Default: 10.0.2.0/24
     Description: The CIDR block for the second public subnet
 
   PrivateSubnetCidr:
     Type: String
-    Default: "10.0.3.0/24"
+    Default: 10.0.3.0/24
     Description: The CIDR block for the private subnet
+
+  MyPublicIP:
+    Type: String
+    Default: 188.26.211.60/32
+    Description: My public IP for allow connections to my INFRA
+
+  PrivateNetworkIp:
+    Type: String
+    Default: 10.0.0.0/8
+    Description: Allow SSH connection form the bastion to the autoescaling group
 
 Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: "https://s3.amazonaws.com/my-s3-ander-templates/vpc-template.yaml"
+      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/vpc-template.yaml
       Parameters:
         VpcCidr: !Ref VpcCidr
 
   SubnetStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: "https://s3.amazonaws.com/my-s3-ander-templates/subnets-template.yaml"
+      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/subnets-template.yaml
       Parameters:
         VPCId: !GetAtt VPCStack.Outputs.VpcId
         PublicSubnet1Cidr: !Ref PublicSubnet1Cidr
         PublicSubnet2Cidr: !Ref PublicSubnet2Cidr
         PrivateSubnetCidr: !Ref PrivateSubnetCidr
         InternetGatewayId: !GetAtt VPCStack.Outputs.InternetGatewayId
+
+  ALBGroupSecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/alb-security-group-template.yaml
+      Parameters:
+        VPCId: !GetAtt VPCStack.Outputs.VpcId
+        MyIP: !Ref MyPublicIP
+        PrivateNetworkIp: !Ref PrivateNetworkIp
 
 Outputs:
   VpcId:
@@ -57,3 +76,6 @@ Outputs:
   PublicSubnetId2:
     Description: The ID of the second public subnet
     Value: !GetAtt SubnetStack.Outputs.PublicSubnetId2
+
+  ALBGroupSecurityId:
+    Value: !GetAtt ALBGroupSecurityStack.Outputs.ALBSecurityGroupId
