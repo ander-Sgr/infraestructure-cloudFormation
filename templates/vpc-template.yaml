@@ -31,20 +31,6 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  EIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-
-  NATGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      SubnetId: !Ref PublicSubnetId
-      AllocationId: !GetAtt EIP.AllocationId
-      Tags:
-           - Value: Name
-             Key: NAT for private subnet
-
 Outputs:
   VpcId:
     Description: The ID of the VPC
@@ -54,6 +40,5 @@ Outputs:
     Description: The ID of the internet gateway
     Value: !Ref InternetGateway
 
-  NATGatewayId:
-    Description: The id of the private NAT gateway
-    Value: !Ref NATGateway
+  AttachGateway:
+    Value: !Ref AttachGateway
