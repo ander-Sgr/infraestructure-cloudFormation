@@ -30,16 +30,17 @@ Parameters:
   PrivateNetworkIp:
     Type: String
     Default: 10.0.0.0/8
-    Description: Allow SSH connection form the bastion to the autoescaling group
+    Description: Allow SSH connection from the bastion to the auto-scaling group
 
   InstanceType:
     Type: String
     Default: t2.micro
+    Description: EC2 instance type
 
   KeyName:
     Type: String
     Default: test-key
-    Description: The keyname for allow connections ssh to the ec2
+    Description: Name of the EC2 Key Pair
 
 Resources:
   VPCStack:
@@ -92,12 +93,21 @@ Resources:
     Properties:
       TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/auto-escaling-group-template.yaml
       Parameters:
-        VPCId: !GetAtt VPCStack.Outputs.VpcId
         PrivateSubnetId: !GetAtt SubnetStack.Outputs.PrivateSubnetId
-        SecurityGroupId: !GetAtt EC2GroupSecurityStack.Outputs.EC2SecurityGroupId
+        EC2SecurityGroupId: !GetAtt EC2GroupSecurityStack.Outputs.EC2SecurityGroupId
         TargetGroupArn: !GetAtt LoadBalancerStack.Outputs.TargetGroupArn
         InstanceType: !Ref InstanceType
         KeyName: !Ref KeyName
+
+  EC2InstanceBastionStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/my-s3-ander-templates/ec2-template.yaml
+      Parameters:
+        SubnetId: !GetAtt SubnetStack.Outputs.PublicSubnetId1
+        KeyName: !Ref KeyName
+        InstanceType: !Ref InstanceType
+        SecurityGroupId: !GetAtt EC2GroupSecurityStack.Outputs.EC2SecurityGroupId
 
 Outputs:
   VpcId:
@@ -118,6 +128,3 @@ Outputs:
 
   ALBGroupSecurityId:
     Value: !GetAtt ALBGroupSecurityStack.Outputs.ALBSecurityGroupId
-
-  EC2SecurityGroupId:
-    Value: !GetAtt EC2GroupSecurityStack.Outputs.EC2SecurityGroupId
