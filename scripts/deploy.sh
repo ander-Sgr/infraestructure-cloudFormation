@@ -34,7 +34,7 @@ echo "Deploying the stack CloudFormation..."
 aws cloudformation deploy \
   --template-file "$TEMPLATE_FILE" \
   --stack-name "$STACK_NAME" \
-  --parameter-overrides MyPublicIP="$MY_PUBLIC_IP" \
+  --parameter-overrides MyPublicIP="$PUBLIC_IP" \
                         KeyName="$KEY_NAME" \
                         S3BucketPrefix="$S3_BUCKET_PREFIX" \
   
