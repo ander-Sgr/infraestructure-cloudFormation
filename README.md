@@ -36,5 +36,50 @@ Este proyecto crea una infraestructura en AWS utilizando CloudFormation, en este
     
     El script ya por defecto cambia los permisos del bucket y se encarga de subir los templates. 
 
+2. **DESPLEGAR EL STACK**:
+    
+    Hecho el anterior paso toca desplegar nuestro stack, para ello hay un script ```./scripts/deploy.sh``` que recibe unos parametros y se encargará de desplegar nuestra         infraestructura.
 
----
+    Para poder ejecutarlo pasamos los parametros 
+    
+         `-p`: Nuestra IP Pública.
+         `-k`: KeyPair generado.
+         `-b`: Nombre del bucket generado en el anterior script.
+
+```sh
+./scripts/deploy.sh -p 188.26.211.60/32 -k test-key -b my-s3-ander-templates
+```
+ 
+Tardará un poco en desplegarse ya que son varios recursos a crear. Podremos ver el proceso de creación desde el dashboard de AWS - CloudFormation.
+
+## Pruebas
+
+Hecho el despligue de nuestra infraestructura, en los outputs podremos una tabla donde se mostrará el DNS del ALB formateado con el puerto 8080
+
+```sh
+"http://loadBalancerApp-1904107911.us-east-1.elb.amazonaws.com:8080"
+```
+
+Con este dato desde nuestro host podremos realizar un **curl** y verifciar que nos da un 200 OK como respuesta. Ya que las instancias EC2 del autoescaling group estan provisioandas con el0 servicio httpd que está en la escucha del puerto 8080
+
+```sh
+curl -I "http://loadBalancerApp-1904107911.us-east-1.elb.amazonaws.com:8080"
+```
+
+Si queremos conectarnos  por ssh al bastion tendremos el output de la IP del bastion
+
+```sh
+ssh -i <ruta de la keyPair> ec2-user@<ip del bastion>
+```
+
+Ahora si queremos hacer conexión ssh desde el bastión a nuestras EC2 del autoescaling group tendremos que pasar nuestra clave .pem generada por el KeyPair desde nuestro host al bastion y ver las IP'S  desde el panel de Instancias de EC2
+
+```sh
+scp -i path/to/keyPair.pem path/to/keyPair.pem ec2-user@bastion-public-ip:/home/ec2-user/private-key.pem
+```
+
+## Problemas Conocidos
+
+- **Acceso al ALB desde el Bastión**:  Uno de los problemas es que al configurar el grupo de seguridad solo doy acceso al puerto 8080 a mi IP Públic, y por ese motivo desde el bastion no se puede realizar un curl a la URL del ALB. 
+- 
+- **Salida de las IP'S privadas**: He investigado para ver de que forma podremos ver esos datos desde cloudformation, pero no la manera es crear otro script aparte con python como boto3.
