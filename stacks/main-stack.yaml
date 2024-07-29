@@ -137,5 +137,5 @@ Outputs:
     Value: !GetAtt EC2InstanceBastionStack.Outputs.BastionPublicIP
 
   LoadBalancerDNSName:
-    Description: The DNS name of the Load Balancer
-    Value: !GetAtt LoadBalancerStack.Outputs.LoadBalancerDNSName
+    Description: The DNS name of the Load Balancer with port 8080
+    Value: !Sub "http://${LoadBalancerStack.Outputs.LoadBalancerDNSName}:8080"
